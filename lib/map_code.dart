@@ -8,25 +8,21 @@ import 'package:geocoding/geocoding.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class HomePage extends StatefulWidget {
-   HomePage({Key? key}) : super(key: key);
+  HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-
-
   String currentAddress = 'My Address';
   Position? currentposition;
   LatLng? latlong;
-  
+
 //  static double ?lat;
 // static double ?long;
-  
 
   _determinePosition() async {
-
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -51,17 +47,12 @@ class _HomePageState extends State<HomePage> {
 
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-        print('\\\\\\\\\\\\\\\\\\\\\\\\');
-
-
-  
+    print('\\\\\\\\\\\\\\\\\\\\\\\\');
 
     //   lat=position.latitude;
     //  long=position.longitude;
 
     try {
-    
-
       List<Placemark> placemarks =
           await placemarkFromCoordinates(position.latitude, position.longitude);
 
@@ -71,10 +62,7 @@ class _HomePageState extends State<HomePage> {
         currentposition = position;
         currentAddress =
             "${place.locality}, ${place.postalCode}, ${place.country}, ${place.name},${place.street}";
-     latlong=  LatLng(position.latitude, position.longitude);
-     print("${position.latitude} this is latitude",);
-     print(position.longitude,);
-     
+        latlong = LatLng(position.latitude, position.longitude);
       });
     } catch (e) {
       print("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\$e");
@@ -82,6 +70,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   late GoogleMapController myController;
+  Set<Marker> markers = {};
 
   // final LatLng _center = const LatLng(23.8103, 90.4125);
 
@@ -108,33 +97,46 @@ class _HomePageState extends State<HomePage> {
                 : Container(),
             TextButton(
                 onPressed: () {
+                  currentposition==null?CircularProgressIndicator():
                   _determinePosition();
                 },
                 child: Text('Locate me')),
             Expanded(
-              child: latlong==null?Container(child: Text('Null velue')): Stack(
-                children: <Widget>[
-                  GoogleMap(
-                    onMapCreated: _onMapCreated,
-                    initialCameraPosition: CameraPosition(
-                      target: latlong!,
-                      zoom: 15,
+              child: latlong == null
+                  ? Container(child: Text('Please Click Locate Me Button'))
+                  : Stack(
+                      children: <Widget>[
+                        GoogleMap(
+                          markers: markers,
+                          onMapCreated: _onMapCreated,
+                          initialCameraPosition: CameraPosition(
+                            target: latlong!,
+                            zoom: 15,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(14.0),
+                          child: Align(
+                            alignment: Alignment.topRight,
+                            child: FloatingActionButton(
+                              onPressed: () {
+                                markers.clear();
+
+                                markers.add(Marker(
+                                    markerId: const MarkerId('currentLocation'),
+                                    position: latlong!));
+
+                                setState(() {});
+                              },
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.padded,
+                              backgroundColor: Colors.green,
+                              child: const Icon(Icons.location_city,size: 30.0),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(14.0),
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: FloatingActionButton(
-                        onPressed: () => print('You have pressed the button'),
-                        materialTapTargetSize: MaterialTapTargetSize.padded,
-                        backgroundColor: Colors.green,
-                        child: const Icon(Icons.map, size: 30.0),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
